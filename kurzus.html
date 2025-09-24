@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A digitális pedagógia gyakorlata - Interaktív Tanmenet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Soft Greens -->
+    <!-- Application Structure Plan: A single-page, vertically scrolling application designed for clarity and intuitive navigation. The structure is thematic, not chronological, starting with a high-level overview (Kurzus Áttekintő), followed by detailed breakdowns of the two main sessions (Jelenléti and Online). A sticky navigation bar allows users to jump between these key sections. This design was chosen to allow instructors to quickly grasp the course's core goals and structure, then dive into the specifics of each session. Interactivity is introduced through a competency distribution chart for a quick visual summary and subtle hover effects on agenda items to encourage exploration. User flow is guided from general to specific, mirroring how one would typically review a syllabus. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: Course Competencies (Knowledge, Skills, Attitude, Autonomy). Goal: Provide a quick, visual summary of the course's focus. Viz/Presentation: Horizontal Bar Chart (Chart.js). Interaction: Tooltips on hover showing percentage focus. Justification: A chart effectively quantifies the qualitative goals of the syllabus, offering a modern, data-informed perspective on the curriculum's balance. Library/Method: Chart.js on a Canvas element.
+        2. Report Info: Detailed 9-hour syllabus. Goal: Organize the schedule into a clear, digestible format. Viz/Presentation: Structured HTML/CSS cards for each hour/topic within two distinct sections (In-person, Online). Interaction: Hover effects on cards for visual feedback. Justification: This card-based layout breaks down a large amount of text into manageable chunks, improving readability and scannability, which is crucial for a dense document like a syllabus. Library/Method: Tailwind CSS for layout, Vanilla JS for potential future enhancements like clickable details.
+        3. Report Info: Different activity types. Goal: Visually differentiate between lecture, practice, and group work. Viz/Presentation: Unicode icons. Interaction: None. Justification: Icons provide a quick visual language that makes the schedule easier to parse at a glance, enhancing the user experience. Library/Method: HTML Unicode characters.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #3f3c3a;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #386641;
+            border-bottom-color: #386641;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.07);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800">A digitális pedagógia gyakorlata</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link font-medium text-gray-600 pb-1">Kurzus Áttekintő</a>
+                <a href="#in-person" class="nav-link font-medium text-gray-600 pb-1">Jelenléti Alkalom</a>
+                <a href="#online" class="nav-link font-medium text-gray-600 pb-1">Online Alkalom</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#overview" class="block py-2 text-gray-600 hover:text-[#386641]">Kurzus Áttekintő</a>
+            <a href="#in-person" class="block py-2 text-gray-600 hover:text-[#386641]">Jelenléti Alkalom</a>
+            <a href="#online" class="block py-2 text-gray-600 hover:text-[#386641]">Online Alkalom</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#386641]">Kurzus Áttekintő</h2>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-10">
+                A kurzus célja, hogy a hallgatók magabiztosan és kreatívan alkalmazzák a digitális eszközöket a tanítói munkában, a 6-12 éves korosztály sajátosságainak és a 21. századi tanulási környezet elvárásainak megfelelően.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">Fejlesztendő Kompetenciák</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-3 mt-1">🧠</span>
+                            <div><strong class="font-semibold">Tudás:</strong> A 6-12 évesek fejlődését, a tanulás támogatását és a digitális eszközök szerepét megalapozó elméleti és módszertani ismeretek.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-3 mt-1">🛠️</span>
+                            <div><strong class="font-semibold">Képesség:</strong> Célokhoz illeszkedő digitális tanulási utak tervezése, a digitális írástudás fejlesztésének támogatása, a közös munka szakszerű irányítása.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-3 mt-1">❤️</span>
+                            <div><strong class="font-semibold">Attitűd:</strong> Nyitottság az új módszerekre, elkötelezettség a gyermekek fejlődésének támogatása iránt a digitális térben is.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-3 mt-1">⚖️</span>
+                            <div><strong class="font-semibold">Autonómia és felelősség:</strong> Felelősségvállalás a rábízott gyermekek kulcskompetenciáinak megalapozásáért.</div>
+                        </li>
+                    </ul>
+                </div>
+                 <div class="card p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-center text-gray-800">Kurzusfókusz eloszlása</h3>
+                    <div class="chart-container">
+                        <canvas id="competencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="in-person" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#386641]">1. Alkalom: Jelenléti Workshop</h2>
+            <p class="text-center text-gray-600 mb-10"><strong>Időtartam:</strong> 4 tanóra (4 x 45 perc) | <strong>Fókusz:</strong> Alapozás, közös gondolkodás, gyakorlati bevezetés</p>
+
+            <div class="space-y-6">
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">1. óra: Bevezetés a digitális pedagógiába</h4>
+                    <p class="text-gray-600 mb-3">A digitális bennszülöttől a tudatos digitális állampolgárig. Az információs társadalom hatása az oktatásra, a tanár és a diák megváltozott szerepe.</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">🗣️ Interaktív előadás</span>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🤝 Csoportos brainstorming</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">2. óra: A digitális tanító eszköztára I.</h4>
+                    <p class="text-gray-600 mb-3">Információkeresés és -értékelés (pl. CRAAP-teszt), adattárolás (felhő vs. lokális), adatbiztonság és digitális lábnyom. Szerzői jogi és etikai alapismeretek.</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">💻 Gyakorlati bemutató</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">✍️ Egyéni feladat</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">3. óra: Pedagógia az első, technológia a második</h4>
+                    <p class="text-gray-600 mb-3">A 6-12 éves korosztály fejlődéslélektani sajátosságai és a digitális világ. A megfelelő eszköz kiválasztása a pedagógiai célhoz (SAMR modell, Bloom digitális taxonómiája).</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                         <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">🗣️ Interaktív előadás</span>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🤝 Csoportmunka</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">4. óra: Az algoritmikus gondolkodás alapjai</h4>
+                    <p class="text-gray-600 mb-3">A gondolkodási folyamatok fejlesztése a kódoláson keresztül. "Robotok nélküli" (unplugged) kódolási tevékenységek az alsó tagozaton. A Code.org és hasonló platformok bemutatása.</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">🎲 Játékos tevékenység</span>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🤝 Páros munka</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="online" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[#386641]">2. Alkalom: Online Műhelymunka</h2>
+            <p class="text-center text-gray-600 mb-10"><strong>Időtartam:</strong> 5 tanóra (5 x 45 perc) | <strong>Fókusz:</strong> Eszközismeret, tartalomkészítés, kollaboráció</p>
+            
+            <div class="space-y-6">
+                 <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">5. óra: A digitális tanterem infrastruktúrája</h4>
+                    <p class="text-gray-600 mb-3">Adminisztrációs felületek a gyakorlatban (pl. KRÉTA). Kommunikációs platformok (szülőkkel, diákokkal). Osztályterem-menedzsment rendszerek (pl. Google Classroom, ClassDojo).</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">💻 Élő bemutató</span>
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full">❓ Q&A szekció</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">6. óra: Interaktív digitális tananyagok készítése I.</h4>
+                    <p class="text-gray-600 mb-3">Szöveg, kép, prezentációk újragondolva. Interaktív bemutatók (pl. Genially), egyszerű infografikák (pl. Canva) és tankockák készítése, a korosztályi sajátosságok figyelembevételével.</p>
+                     <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">💻 Gyakorlati workshop</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">✍️ Önálló alkotómunka</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">7. óra: Interaktív digitális tananyagok készítése II.</h4>
+                    <p class="text-gray-600 mb-3">A gamifikáció (játékosítás) alapjai. Digitális kvízek, játékok, feladatlapok készítése (pl. Kahoot!, Wordwall, LearningApps) és alkalmazása formatív értékelésre.</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">💻 Gyakorlati workshop</span>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🗣️ Munkák megosztása</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">8. óra: Kollaboratív tanulás és digitális projektmunka</h4>
+                    <p class="text-gray-600 mb-3">Az online együttműködés eszközei (pl. megosztott dokumentumok, digitális táblák). Digitális csoportprojektek tervezése és menedzselése alsó tagozaton.</p>
+                     <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">💻 Eszközbemutató</span>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🤝 Kiscsoportos tervezés</span>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-bold mb-2">9. óra: Szintézis és kitekintés</h4>
+                    <p class="text-gray-600 mb-3">A reflektív digitális pedagógus. Szakmai fejlődési lehetőségek, online közösségek. A kurzus során tanultak összegzése, a féléves projektfeladat megbeszélése, kurzuszárás.</p>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full">🗣️ Záró megbeszélés</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">🎯 Célkitűzés</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-white border-t mt-12">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+            <p>&copy; 2025 | Javaslat a "Digitális pedagógia gyakorlata" kurzushoz</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('#mobile-menu a, nav a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    if(this.getAttribute('href').startsWith('#')) {
+                        e.preventDefault();
+                        document.querySelector(this.getAttribute('href')).scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        if (!mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+            
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('nav a.nav-link');
+            
+            window.onscroll = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 120) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+
+
+            const ctx = document.getElementById('competencyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tudás', 'Képesség', 'Attitűd', 'Autonómia'],
+                    datasets: [{
+                        label: 'Kompetenciák Fókusza',
+                        data: [25, 40, 20, 15],
+                        backgroundColor: [
+                            'rgba(163, 190, 140, 0.6)',
+                            'rgba(94, 139, 103, 0.6)',
+                            'rgba(56, 102, 65, 0.6)',
+                            'rgba(186, 205, 170, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(163, 190, 140, 1)',
+                            'rgba(94, 139, 103, 1)',
+                            'rgba(56, 102, 65, 1)',
+                            'rgba(186, 205, 170, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
